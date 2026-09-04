@@ -229,6 +229,21 @@ document.getElementById("toggle-btn").onclick = function () {
         
     
             geo_json_87e18814d71e0eefc1253de9947400c3.addTo(map_2e2ea2efb4312d2d07f6c71cc9bb4f3c);
-        
+        // Gestion de l'affichage de la boîte d'information
+    const infoBtn = document.getElementById("info-toggle-btn");
+    const infoBox = document.getElementById("info-box");
+    const closeBtn = document.getElementById("info-close-btn");
+
+    infoBtn.onclick = function () {
+        if (infoBox.style.display === "block") {
+            infoBox.style.display = "none";
+        } else {
+            infoBox.style.display = "block";
+        }
+    };
+
+    closeBtn.onclick = function () {
+        infoBox.style.display = "none";
+    };
 </script>
 </html>
