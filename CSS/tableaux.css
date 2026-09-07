@@ -1,45 +1,148 @@
-    h1{
-    margin-bottom:20px;
-    color:#8D90A1;
-    font-size:18px;
-    font-weight:bold;
-  }
-    h2{
-    margin-bottom:15px;
-    color:#8D90A1;
-    font-size:18px;
-    font-weight:bold;
-  }
-    h3, h4{
-    margin-bottom:12px;
-    color:#8D90A1;
-    font-size:18px;
-    font-weight:bold;
-  }
-  body{
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      margin:20px;
-      background:#154E96;
-      color:#8D90A1;
-  }
-  table{
-    border-collapse:collapse;
-      width:100%;
-      max-width:400px;
-      background:#154E96;
-      color:#8D90A1;
-  }
-  th,td{
-      border:1px solid #ddd;
-      padding:8px;
-      text-align:right;
-  }
-  th{
-      background:#154E96;
-      text-align:left;
-  }
-  caption{
-      font-weight:600;
-      margin-bottom:8px;
-      text-align:left;
-  }
+/* =========================================================
+   STYLE GENERAL
+========================================================= */
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    margin: 20px;
+    background: #154E96;
+    color: #FFFFFF;
+}
+
+
+/* =========================================================
+   TITRES
+========================================================= */
+
+h1 {
+    margin-bottom: 20px;
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+h2 {
+    margin-bottom: 15px;
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+h3,
+h4 {
+    margin-bottom: 12px;
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+
+/* =========================================================
+   TABLEAU
+========================================================= */
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 600px;
+    background: #154E96;
+    color: #FFFFFF;
+    table-layout: fixed;
+}
+
+
+/* =========================================================
+   LARGEUR DES COLONNES
+========================================================= */
+
+#tbl th:nth-child(1),
+#tbl td:nth-child(1) {
+    width: 40%;
+}
+
+#tbl th:nth-child(2),
+#tbl td:nth-child(2) {
+    width: 25%;
+}
+
+#tbl th:nth-child(3),
+#tbl td:nth-child(3) {
+    width: 35%;
+}
+
+
+/* =========================================================
+   CELLULES
+========================================================= */
+
+th,
+td {
+    border: 1px solid #3a506b;
+    padding: 8px;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   EN-TETE
+========================================================= */
+
+th {
+    background: #1653A1;
+    color: #00f5d4;
+    text-align: center;
+    font-weight: bold;
+}
+
+
+/* =========================================================
+   CELLULES DATE / HEURE
+========================================================= */
+
+td.txt {
+    text-align: center;
+    color: #FFFFFF;
+}
+
+
+/* =========================================================
+   CELLULE VALEUR
+========================================================= */
+
+td.num {
+    text-align: right;
+    color: #FFFFFF;
+}
+
+
+/* =========================================================
+   ALTERNANCE DES LIGNES
+========================================================= */
+
+tbody tr:nth-child(even) {
+    background: #123575;
+}
+
+tbody tr:nth-child(odd) {
+    background: #154E96;
+}
+
+
+/* =========================================================
+   EFFET AU SURVOL
+========================================================= */
+
+tbody tr:hover {
+    background: #1C4394;
+}
+
+
+/* =========================================================
+   CAPTION
+========================================================= */
+
+caption {
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-align: left;
+}
