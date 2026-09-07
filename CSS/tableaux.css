@@ -27,6 +27,7 @@
       width:100%;
       max-width:400px
       background:#154E96;
+      color:#8D90A1;
   }
   th,td{
       border:1px solid #ddd;
@@ -34,6 +35,7 @@
       text-align:right
   }
   th{
+      color:#8D90A1;
       background:#154E96;
       text-align:left
   }
