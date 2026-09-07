@@ -15,14 +15,12 @@ body {
 
 h1 {
     margin-bottom: 20px;
-    color: #BDC4C7;
     font-size: 18px;
     font-weight: bold;
 }
 
 h2 {
     margin-bottom: 15px;
-    color: #BDC4C7;
     font-size: 18px;
     font-weight: bold;
 }
@@ -30,7 +28,6 @@ h2 {
 h3,
 h4 {
     margin-bottom: 12px;
-    color: #BDC4C7;
     font-size: 18px;
     font-weight: bold;
 }
@@ -45,7 +42,7 @@ table {
     width: 100%;
     max-width: 600px;
     background: #154E96;
-    color: #BDC4C7;
+    color: #CECED9;
     table-layout: fixed;
 }
 
