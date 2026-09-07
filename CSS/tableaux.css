@@ -84,7 +84,7 @@ td {
 ========================================================= */
 
 th {
-    background: #1653A1;
+    background: #1553A1;
     color: #A8B0B5;
     text-align: center;
     font-weight: bold;
@@ -95,11 +95,11 @@ th {
 ========================================================= */
 
 tbody tr:nth-child(even) {
-    background: #134685;
+    background: #1563A1;
 }
 
 tbody tr:nth-child(odd) {
-    background: #113F78;
+    background: #1573A1;
 }
 
 
