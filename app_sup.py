@@ -6,215 +6,177 @@ import xgboost as xgb
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.express as px
 import plotly.graph_objects as go
-import requests
-import streamlit.components.v1 as components
 import folium
 from streamlit_folium import st_folium
 from pyproj import Transformer
 import numpy as np
 
+# =========================
+# CONFIGURATION DE LA PAGE
+# =========================
 st.set_page_config(
-    page_title="Prévisions de Hauteur d'Eau",
+    page_title="Dashboard hydrologie de Beauvais",
     page_icon="🌊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# =========================
-# CONFIG (UNE SEULE FOIS)
-# =========================
-st.set_page_config(page_title="Dashboard Eau", layout="wide")
+# ==============================================================================
+# INJECTION CSS PERSONNALISÉE (THÈME BLEU FONCÉ & CONTOURS TABLEAUX)
+# ==============================================================================
+st.markdown(
+    """
+    <style>
+    /* =================================
+       1. FOND GLOBAL ET TYPOGRAPHIE
+       ============================== */
+    .stApp {
+        background-color: #204F8C !important; /* Bleu nuit profond */
+        color: #8D90A1 !important;
+    }
 
-st.title("📊 Dashboard hydrologie Beauvais")
-# =========================
-# IFRAME (GitHub Pages)
-# =========================
-if "tableaux_alternatifs" not in st.session_state:
-    st.session_state.tableaux_alternatifs = False
+    .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, 
+    .stApp span, .stApp label, .stApp div {
+        color: #AFB6BA;
+    }
 
-if st.button("Afficher les tableaux actuels"):
-    st.session_state.tableaux_alternatifs = not st.session_state.tableaux_alternatifs
+    /* =========================
+       2. BOUTONS (st.button)
+       ====================== */
+    
+    div.stButton > button {
+        background-color: #085B8A !important;
+        color: #FFFFFF !important;
+        border: 1px solid #3a506b !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        width: 100%;
+    }
 
-col1, col2, col3 = st.columns(3)
+    div.stButton > button:hover {
+        background-color: #214385 !important;
+        color: #00f5d4 !important;
+        border-color: #00f5d4 !important;
+        box-shadow: 0 0 10px rgba(0, 245, 212, 0.3) !important;
+    }
 
-with col1:
+/* ==============================
+   BOUTON ET FENÊTRE DU POPOVER
+   =========================== */
 
-    if not st.session_state.tableaux_alternatifs:
-        components.iframe(
-            "https://fruits-des-bois.github.io/Tableau/debit_d_eau.html",
-            height=320,
-            scrolling=True
-        )
-    else:
-        components.iframe(
-            "https://fruits-des-bois.github.io/Tableau/debit_eau.html",
-            height=320,
-            scrolling=True
-        )
+    div[data-testid="stPopover"] button {
+        background-color: #296F8C !important;
+        color: #C3CDD6 !important;
+        border: 1px solid #3a506b !important;
+        width: 60px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        padding: 0 !important;
+        font-weight: bold !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
 
-with col2:
+    div[data-testid="stPopover"] button:hover {
+        background-color: #296F8C !important;
+        color: #C3CDD6 !important;
+        border-color: #00f5d4 !important;
+    }
 
-    if not st.session_state.tableaux_alternatifs:
-        components.iframe(
-            "https://fruits-des-bois.github.io/Tableau/hauteur_d_eau.html",
-            height=320,
-            scrolling=True
-        )
-    else:
-        components.iframe(
-            "https://fruits-des-bois.github.io/Tableau/hauteur_eau.html",
-            height=320,
-            scrolling=True
-        )
 
-with col3:
-    components.iframe(
-        "https://fruits-des-bois.github.io/Tableau/carte_beauvais.html",
-        height=500,
-        width=500,
-        scrolling=False
-    )
+    /* ===========================
+       FENÊTRE DU POPOVER
+       ========================= */
 
-# =========================
-# MÉTÉO OPEN-METEO
-# =========================
+    div[data-testid="stPopoverBody"],
+    div[data-testid="stPopoverBody"] > div,
+    div[data-testid="stPopoverBody"] > div > div {
+        background-color: #296F8C !important;
+        color: #C3CDD6 !important;
+    }
 
-col_btn1, col_btn2 = st.columns(2)
 
-with col_btn1:
-    if st.button("Prévisions de pluies"):
-        st.session_state.vue_pluie = "horaire"
+    /* Contenu texte */
+    div[data-testid="stPopoverBody"] p,
+    div[data-testid="stPopoverBody"] li,
+    div[data-testid="stPopoverBody"] span {
+        color: #C3CDD6 !important;
+        background-color: #296F8C !important;
+    }
 
-with col_btn2:
-    if st.button("pluie historiques"):
-        st.session_state.vue_pluie = "journaliere"
 
-url = (
-    "https://api.open-meteo.com/v1/forecast"
-    "?latitude=49.4465"
-    "&longitude=2.127167"
-    "&hourly=precipitation"
-    "&timezone=Europe/Paris"
+    /* Bordure et arrondi */
+    div[data-testid="stPopoverBody"] {
+        border: 1px solid #48cae4 !important;
+        border-radius: 8px !important;
+        padding: 12px !important;
+    }
+    
+
+    /* ============================
+    4. DATAFRAMES INTERACTIFS (st.dataframe) 
+    ============================*/
+    div[data-testid="stDataFrame"] {
+        border: 1px solid #3a506b !important;
+        border-radius: 8px !important;
+        background-color: #193F8C !important;
+    }
+
+    /* ============================
+    5. ONGLETS (st.tabs) 
+    ============================*/
+    button[data-baseweb="tab"] {
+        background-color: #085B8A !important;
+        color: #e0e1dd !important;
+        border-radius: 6px 6px 0px 0px !important;
+        border: 1px solid #3a506b !important;
+        margin-right: 4px !important;
+    }
+
+    button[aria-selected="true"] {
+        background-color: #1C4394 !important;
+        color: #00f5d4 !important;
+        border-bottom: 3px solid #00f5d4 !important;
+    }
+
+
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
-r = requests.get(url)
-data = r.json()
-
-times = pd.to_datetime(data["hourly"]["time"])
-rain = data["hourly"]["precipitation"]
-
-df = pd.DataFrame({
-    "datetime": times,
-    "precipitation_mm": rain
-})
-
-now = pd.Timestamp.now()
-end = now + pd.Timedelta(days=4)
-
-df = df[(df["datetime"] >= now) & (df["datetime"] <= end)]
-
-# -----------------------------
-# Graphique précipitations
-# -----------------------------
-if "vue_pluie" not in st.session_state:
-    st.session_state.vue_pluie = "horaire"
-
-
-# -----------------------------
-# INITIALISATION
-# -----------------------------
-fig = None
-
-# -----------------------------
-# Vue horaire (prévisions)
-# -----------------------------
-if st.session_state.vue_pluie == "horaire":
-
-    fig = go.Figure()
-
-    fig.add_trace(
-        go.Bar(
-            x=df["datetime"],
-            y=df["precipitation_mm"],
-            name="Précipitations"
-        )
-    )
-
+def appliquer_theme_plotly(fig):
     fig.update_layout(
-        width=800,
-        height=450,
-        title="Précipitations horaires sur 4 jours (prévisions)",
-        xaxis_title="Date - Heure",
-        yaxis_title="Précipitations (mm)"
+        paper_bgcolor="#124582",  # Fond extérieur du graphique (identique à la page)
+        plot_bgcolor="#193F8C",   # Fond de la zone de traçage
+        font=dict(color="#A1A2AD"), # Couleur du texte
+        title_font=dict(color="#A1A2AD", size=16), # Couleur des titres
+        xaxis=dict(
+            gridcolor="#16397D",   # Couleur de la grille
+            title_font=dict(color="#8D90A1"),
+            tickfont=dict(color="#8D90A1")
+        ),
+        yaxis=dict(
+            gridcolor="#16397D",   # Couleur de la grille
+            title_font=dict(color="#8D90A1"),
+            tickfont=dict(color="#8D90A1")
+        ),
+        margin=dict(l=40, r=40, t=50, b=40)
     )
+    return fig
 
-    fig.update_xaxes(
-        dtick=6 * 60 * 60 * 1000,
-        tickformat="%d/%m\n%Hh"
-    )
+st.title("📊 Dashboard hydrologie Beauvais")
 
-
-# -----------------------------
-# Vue historique (4 jours passés)
-# -----------------------------
-else:
-
-    end_date = pd.Timestamp.now().strftime("%Y-%m-%d")
-    start_date = (pd.Timestamp.now() - pd.Timedelta(days=4)).strftime("%Y-%m-%d")
-
-    url_hist = (
-        "https://archive-api.open-meteo.com/v1/archive"
-        f"?latitude=49.4465"
-        f"&longitude=2.127167"
-        f"&start_date={start_date}"
-        f"&end_date={end_date}"
-        "&hourly=precipitation"
-        "&timezone=Europe/Paris"
-    )
-
-    r_hist = requests.get(url_hist)
-    data_hist = r_hist.json()
-
-    times_hist = pd.to_datetime(data_hist["hourly"]["time"])
-    rain_hist = data_hist["hourly"]["precipitation"]
-
-    df_hist = pd.DataFrame({
-        "datetime": times_hist,
-        "precipitation_mm": rain_hist
-    })
-
-    fig = go.Figure()
-
-    fig.add_trace(
-        go.Bar(
-            x=df_hist["datetime"],
-            y=df_hist["precipitation_mm"],
-            name="Précipitations observées"
-        )
-    )
-
-    fig.update_layout(
-        width=800,
-        height=450,
-        title="Précipitations horaires des 4 derniers jours",
-        xaxis_title="Date - Heure",
-        yaxis_title="Précipitations (mm)",
-        hovermode="x unified"
-    )
-
-    fig.update_xaxes(
-        dtick=6 * 60 * 60 * 1000,
-        tickformat="%d/%m\n%Hh"
-    )
-
-# -----------------------------
-# AFFICHAGE UNIQUE (IMPORTANT)
-# -----------------------------
-st.plotly_chart(fig, use_container_width=False, key="pluie_chart")
-
+# ------------------------
 # Début du code Streamlit
+# ------------------------
+
 @st.cache_data(ttl=3600) # mise en cache des données pour 1 heure
 def fetch_data():
     # --- 1. Récupération des hauteurs d'eau ---
@@ -682,57 +644,253 @@ def fetch_data():
         historique_pluie = historique_pluie[-24:]
 
     # Construire le dataframe
-    df_predictions_future_enhanced = pd.DataFrame({
-    "Date et heure": df_future_enhanced["Date d'Observation"],
-    "Hauteur d'eau prévue (mm)": predictions
+    return pd.DataFrame({
+        "Date et heure": df_future_enhanced["Date d'Observation"],
+        "Hauteur d'eau prévue (mm)": predictions
     })
-    
 
-    return df_predictions_future_enhanced
+# =========================
+# ONGLETS DE NAVIGATION
+# =========================
+tab_debit, tab_hauteur, tab_carte, tab_meteo, tab_previsions = st.tabs([
+    "💧 Débit d'eau", 
+    "📏 Hauteur d'eau", 
+    "🗺️ Carte", 
+    "🌧️ Précipitations", 
+    "📈 Prévision de hauteur d’eau"
+])
+# -------------------------
+# TAB : DEBIT D'EAU
+# -------------------------
+with tab_debit:
+  st.subheader("Débit d'eau du Thérain")
 
+  if 'url_debit' not in st.session_state:
+    st.session_state.url_debit = (
+        'https://fruits-des-bois.github.io/Tableau/debit_d_eau.html'
+    )
 
-with st.spinner('Chargement des données et calcul des prévisions...'):
+  col_debit1, col_debit2, col_info_debit = st.columns([1, 1, 0.2])
+  with col_debit1:
+    if st.button('5 dernières mesures', key='btn_prev_debit'):
+      st.session_state.url_debit = (
+          'https://fruits-des-bois.github.io/Tableau/debit_d_eau.html'
+      )
+  with col_debit2:
+    if st.button('Historique', key='btn_hist_debit'):
+      st.session_state.url_debit = (
+          'https://fruits-des-bois.github.io/Tableau/debit_eau.html'
+      )
+
+  with col_info_debit:
+    with st.popover('ℹ️'):
+      if (
+          st.session_state.url_debit
+          == 'https://fruits-des-bois.github.io/Tableau/debit_d_eau.html'
+      ):
+        st.markdown('**Détails - 5 dernières mesures**')
+        st.write(
+            "Ce tableau présente les données de débit mesurées au niveau de la"
+            " station hydrométrique de Beauvais, grâce à l'API Hub'Eau. Les 5"
+            ' dernières mesures de débit sont transmises avec un retard de 2 à'
+            ' 3 heures.\n Chaque mesure est espacée de dix minutes l\'une de'
+            ' l\'autre.'
+        )
+      else:
+        st.markdown('**Détails - Historique**')
+        st.write(
+            'Ce tableau présente la moyenne horaire des cinq heures'
+            ' précédent les 5 dernières mesures.'
+        )
+
+  components.iframe(st.session_state.url_debit, height=600, scrolling=True)
+
+# -------------------------
+# TAB : HAUTEUR D'EAU
+# -------------------------
+with tab_hauteur:
+  st.subheader("Hauteur d'eau du Thérain")
+
+  if 'url_hauteur' not in st.session_state:
+    st.session_state.url_hauteur = (
+        'https://fruits-des-bois.github.io/Tableau/hauteur_d_eau.html'
+    )
+
+  col_h1, col_h2, col_info = st.columns([1, 1, 0.2])
+
+  with col_h1:
+    if st.button('5 dernières mesures', key='btn_h'):
+      st.session_state.url_hauteur = (
+          'https://fruits-des-bois.github.io/Tableau/hauteur_d_eau.html'
+      )
+
+  with col_h2:
+    if st.button('Historique', key='btn_hist_h'):
+      st.session_state.url_hauteur = (
+          'https://fruits-des-bois.github.io/Tableau/hauteur_eau.html'
+      )
+
+  with col_info:
+    with st.popover('ℹ️'):
+      if (
+          st.session_state.url_hauteur
+          == 'https://fruits-des-bois.github.io/Tableau/hauteur_d_eau.html'
+      ):
+        st.markdown('**Détails - 5 dernières mesures**')
+        st.write(
+            "Ce tableau présente les données de hauteur d'eau  mesurées au"
+            " niveau de la station hydrométrique de Beauvais. Les 5 dernières"
+            " hauteurs d'eau sont transmises avec un retard de 2 à 3 heures.\n"
+            " Chaque mesure est espacée de dix minutes l'une de l'autre."
+        )
+      else:
+        st.markdown('**Détails - Historique**')
+        st.write(
+            'Ce tableau présente la moyenne horaire des cinq heures'
+            ' précédent les 5 dernières mesures.'
+        )
+
+  components.iframe(st.session_state.url_hauteur, height=600, scrolling=True)
+
+# -------------------------
+# TAB : CARTE
+# -------------------------
+with tab_carte:
+  st.subheader('Carte des alentours de Beauvais')
+  components.iframe(
+      'https://fruits-des-bois.github.io/Tableau/carte_beauvais.html',
+      height=500,
+      scrolling=True,
+  )
+
+# -------------------------
+# TAB : METEO
+# -------------------------
+with tab_meteo:
+  st.subheader('Prévisions des pluies de la ville de Beauvais')
+
+  if 'vue_pluie' not in st.session_state:
+    st.session_state.vue_pluie = 'horaire'
+
+  col_m1, col_m2, col_info_meteo = st.columns([1, 1, 0.2])
+  with col_m1:
+    if st.button('Prévisions (4 prochains jours)', key='btn_prev_m'):
+      st.session_state.vue_pluie = 'horaire'
+  with col_m2:
+    if st.button('Historique (4 derniers jours)', key='btn_hist_m'):
+      st.session_state.vue_pluie = 'journaliere'
+
+  with col_info_meteo:
+    with st.popover('ℹ️'):
+      if st.session_state.vue_pluie == 'horaire':
+        st.markdown('**Détails - Prévisions**')
+        st.write(
+            'Ce graphique montre les prévisions de pluies pour les 4 prochains'
+            " jours. Ce graphique est alimenté par les données de l'API de"
+            ' météofrance, open-météo. La station météorologique mesurant ces données' 
+            "est située au niveau de l'aéroport de Beauvais-Tillé, dont la"
+            'localisation est visible au niveau de la carte de Beauvais.' 
+        )
+      else:
+        st.markdown('**Détails - Historique**')
+        st.write(
+            'Ce graphique présente les pluies historiques survenues jusqu\'à 4'
+            ' jours plus tôt, au niveau de la ville de Beauvais.'
+        )
+
+  if st.session_state.vue_pluie == 'horaire':
+    url = 'https://api.open-meteo.com/v1/forecast?latitude=49.4465&longitude=2.127167&hourly=precipitation&timezone=Europe/Paris'
+    r = requests.get(url)
+    data = r.json()
+    df_pluie = pd.DataFrame({
+        'datetime': pd.to_datetime(data['hourly']['time']),
+        'precipitation_mm': data['hourly']['precipitation'],
+    })
+    now = pd.Timestamp.now()
+    df_pluie = df_pluie[
+        (df_pluie['datetime'] >= now)
+        & (df_pluie['datetime'] <= now + pd.Timedelta(days=4))
+    ]
+
+    fig_pluie = go.Figure(
+        go.Bar(
+            x=df_pluie['datetime'],
+            y=df_pluie['precipitation_mm'],
+            name='Précipitations',
+            marker_color='#1342BD',  # Couleur des barres
+        )
+    )
+    fig_pluie.update_layout(
+        title='Précipitations horaires prévues (4 jours)',
+        xaxis_title='Date - Heure',
+        yaxis_title='Précipitations (mm)',
+    )
+  else:
+    end_date = pd.Timestamp.now().strftime('%Y-%m-%d')
+    start_date = (pd.Timestamp.now() - pd.Timedelta(days=4)).strftime(
+        '%Y-%m-%d'
+    )
+    url_hist = f'https://archive-api.open-meteo.com/v1/archive?latitude=49.4465&longitude=2.127167&start_date={start_date}&end_date={end_date}&hourly=precipitation&timezone=Europe/Paris'
+    r_hist = requests.get(url_hist)
+    data_hist = r_hist.json()
+    df_hist = pd.DataFrame({
+        'datetime': pd.to_datetime(data_hist['hourly']['time']),
+        'precipitation_mm': data_hist['hourly']['precipitation'],
+    })
+    fig_pluie = go.Figure(
+        go.Bar(
+            x=df_hist['datetime'],
+            y=df_hist['precipitation_mm'],
+            name='Précipitations observées',
+            marker_color='#1342BD', #couleur des barres
+        )
+    )
+    fig_pluie.update_layout(
+        title='Précipitations horaires observées (4 derniers jours)',
+        xaxis_title='Date - Heure',
+        yaxis_title='Précipitations (mm)',
+    )
+
+  fig_pluie = appliquer_theme_plotly(fig_pluie)
+  fig_pluie.update_xaxes(dtick=6 * 3600 * 1000, tickformat='%d/%m\n%Hh')
+
+  # Affichage du graphique UNIQUEMENT à l'intérieur de l'onglet météo
+  st.plotly_chart(fig_pluie, use_container_width=True)
+
+# ------------------
+# TAB : PREVISIONS
+# ------------------
+with tab_previsions:
+  col_title, col_info = st.columns([0.85, 0.15])
+  with col_title:
+    st.subheader("📈 Prévisions de la hauteur d'eau du Thérain")
+  with col_info:
+    with st.popover('ℹ️'):
+      st.markdown('**Fonctionnement du modèle**')
+      st.write("""
+            Ce graphique présente plusieurs données :
+
+            **Hauteurs d'eau** en fonction du temps, sur une durée de **trois jours**.
+            
+            Le modèle requiert plusieurs jeux de données : 
+            1. **Données hydrologiques :** Hauteurs d'eau et débits historiques, et ceux mesurés en temps réel au niveau de la station hydrométrique de Beauvais. Les données hydrologiques mesurées en temps réel sont récupérées grâce à une API de la plateforme Hub'Eau.
+            2. **Données pluviométriques :** Précipitations prévues et historiques, mesurées au niveau de la station météorologique de Beauvais-Tillé. Les prévisions sont récupérées grâce à l'API de la plateforme open-météo.  
+
+            **Algorithme :**
+            Dans un premier temps, le code récupère les données de pluviométrie, hauteurs d'eau et débits mesurées en temps réel via les différentes API, ainsi que les données historiques.
+            Ensuite, il calcule des variable de décalage temporel par grandeurs (hauteur d'eau, débit) pour plusieurs durées (3h, 6h, 12h, 24h).
+            Enfin, le modèle XGBoost est crée en se basant sur les jeux de données et le lien entre ces données, citées précedemment.
+            """)
+
+  with st.spinner('Calcul des prévisions...'):
     predictions_df = fetch_data()
+    fig_pred = px.line(
+        predictions_df,
+        x='Date et heure',
+        y="Hauteur d'eau prévue (mm)",
+        title="Hauteur d'eau pour les 72 prochaines heures",
+    )
+    fig_pred.update_traces(line_color='#1570D1', line_width=3)
+    fig_pred = appliquer_theme_plotly(fig_pred)
 
-fig = px.line(
-    predictions_df,
-    width=800,
-    height=500,
-    x="Date et heure",
-    y="Hauteur d'eau prévue (mm)",
-    title="Prévisions futures des hauteurs d'eau",
-    labels={
-        "Date et heure": "Date et Heure",
-        "Hauteur d'eau prévue (mm)": "Hauteur d'eau (mm)"
-    }
-)
-fig.update_traces(
-    mode="lines",
-    hovertemplate="%{y:.2f} mm<extra></extra>"
-)
-fig.update_layout(
-    xaxis_title="Date et Heure",
-    yaxis_title="Hauteur d'eau (mm)",
-    hovermode="x unified"
-)
-st.plotly_chart(fig, use_container_width=True)
-
-# l.27 : Construction de l'API Hub'Eau - Hauteur d'eau
-# l.49 : # Construction de l'API Hub'Eau - Débit
-# l.67 : définition des dates pour les crues
-# l.81 : Construction de l'API Météo pour les pluies passées
-# l.108 : Construction de l'API météo prévisions pluies
-# l. 272-278 :  Création d'un XGBoost (XGBRgressor) avec objective='reg:squarederror' (fonction de perte), n_estimator=nb d'arbres de décision et random_state rend les résultats reproductibles
-#Le 1er arbre fait une première approximation de la hauteur d’eau
-#Le 2e arbre corrige les erreurs du 1er
-#Le 3e arbre corrige encore les erreurs restantes, jusqu'au bout (100)
-#le random_state correspond à une graine de hasard, qui contrôle :
-#l’ordre aléatoire des données
-##certaines décisions internes du modèle
-#la reproductibilité du résultat
-# Sans le random_state, le modèle change à chaque exécution ce qui diminue grandement sa fiabilité
-# Avec un random state = 42, le modèle reste plus ou moins le même à chaque exécution
-# Le random_state peux assurer la stabilité du modèle, le nombre d'estimateurs sa complexité
-# l.284 : définition des plages de prévisions
-# l. 286 : moyenne horaire pour les prévisions
-# l.379 : Affichage et conception du graphique
+    st.plotly_chart(fig_pred, use_container_width=True)
