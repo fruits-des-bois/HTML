@@ -95,11 +95,11 @@ th {
 ========================================================= */
 
 tbody tr:nth-child(even) {
-    background: #1563A1;
+    background: #1563A9;
 }
 
 tbody tr:nth-child(odd) {
-    background: #1573A1;
+    background: #1573A0;
 }
 
 
