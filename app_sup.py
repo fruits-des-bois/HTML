@@ -97,8 +97,8 @@ st.markdown(
     div[data-testid="stPopoverBody"],
     div[data-testid="stPopoverBody"] > div,
     div[data-testid="stPopoverBody"] > div > div {
-        background-color: #296F8C !important;
-        color: #C3CDD6 !important;
+        background-color: #2093C7 !important;
+        color: #222424 !important;
     }
 
 
@@ -106,8 +106,8 @@ st.markdown(
     div[data-testid="stPopoverBody"] p,
     div[data-testid="stPopoverBody"] li,
     div[data-testid="stPopoverBody"] span {
-        color: #C3CDD6 !important;
-        background-color: #296F8C !important;
+        color: #222424 !important;
+        background-color: #2093C7 !important;
     }
 
 
@@ -153,19 +153,19 @@ st.markdown(
 
 def appliquer_theme_plotly(fig):
     fig.update_layout(
-        paper_bgcolor="#124582",  # Fond extérieur du graphique (identique à la page)
-        plot_bgcolor="#193F8C",   # Fond de la zone de traçage
+        paper_bgcolor="#24A1D6",  # Fond extérieur du graphique (identique à la page)
+        plot_bgcolor="#AAB7BD",   # Fond de la zone de traçage
         font=dict(color="#A1A2AD"), # Couleur du texte
-        title_font=dict(color="#A1A2AD", size=16), # Couleur des titres
+        title_font=dict(color="#30303B", size=16), # Couleur des titres
         xaxis=dict(
-            gridcolor="#16397D",   # Couleur de la grille
-            title_font=dict(color="#8D90A1"),
-            tickfont=dict(color="#8D90A1")
+            gridcolor="#33333D",   # Couleur de la grille
+            title_font=dict(color="#30303B"),
+            tickfont=dict(color="#30303B")
         ),
         yaxis=dict(
-            gridcolor="#16397D",   # Couleur de la grille
-            title_font=dict(color="#8D90A1"),
-            tickfont=dict(color="#8D90A1")
+            gridcolor="#929AA6",   # Couleur de la grille
+            title_font=dict(color="#30303B"),
+            tickfont=dict(color="#30303B")
         ),
         margin=dict(l=40, r=40, t=50, b=40)
     )
@@ -700,7 +700,11 @@ with tab_debit:
         st.markdown('**Détails - Historique**')
         st.write(
             'Ce tableau présente la moyenne horaire des cinq heures'
-            ' précédent les 5 dernières mesures.'
+            ' précédent les 5 dernières mesures'
+            " disponibles pour la station hydrométrique de Beauvais. "
+            "Il permet de consulter l'évolution passée des débits"
+                " et d'observer les variations enregistrées au cours "
+                "des périodes précédentes."
         )
 
   components.iframe(st.session_state.url_debit, height=600, scrolling=True)
@@ -747,7 +751,11 @@ with tab_hauteur:
         st.markdown('**Détails - Historique**')
         st.write(
             'Ce tableau présente la moyenne horaire des cinq heures'
-            ' précédent les 5 dernières mesures.'
+            ' précédent les 5 dernières mesures'
+            " disponibles pour la station hydrométrique de Beauvais. "
+            "Il permet de consulter l'évolution passée des hauteurs d'eau"
+                " et d'observer les variations enregistrées au cours "
+                "des périodes précédentes."
         )
 
   components.iframe(st.session_state.url_hauteur, height=600, scrolling=True)
@@ -788,8 +796,8 @@ with tab_meteo:
             'Ce graphique montre les prévisions de pluies pour les 4 prochains'
             " jours. Ce graphique est alimenté par les données de l'API de"
             ' météofrance, open-météo. La station météorologique mesurant ces données' 
-            "est située au niveau de l'aéroport de Beauvais-Tillé, dont la"
-            'localisation est visible au niveau de la carte de Beauvais.' 
+            " est située au niveau de l'aéroport de Beauvais-Tillé, dont la"
+            ' localisation est visible au niveau de la carte de Beauvais.' 
         )
       else:
         st.markdown('**Détails - Historique**')
@@ -817,7 +825,7 @@ with tab_meteo:
             x=df_pluie['datetime'],
             y=df_pluie['precipitation_mm'],
             name='Précipitations',
-            marker_color='#1342BD',  # Couleur des barres
+            marker_color='#113391',  # Couleur des barres
         )
     )
     fig_pluie.update_layout(
@@ -842,7 +850,7 @@ with tab_meteo:
             x=df_hist['datetime'],
             y=df_hist['precipitation_mm'],
             name='Précipitations observées',
-            marker_color='#1342BD', #couleur des barres
+            marker_color='#113391', #couleur des barres
         )
     )
     fig_pluie.update_layout(
